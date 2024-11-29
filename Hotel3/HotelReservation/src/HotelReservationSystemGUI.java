@@ -1,97 +1,104 @@
-// HotelReservationSystemGUI.java
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 public class HotelReservationSystemGUI {
-    private static Hotel hotel = new Hotel(5); // Hotel with 5 rooms
+    private static Hotel hotel = new Hotel();
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Hotel Reservation System");
+        JFrame frame = new JFrame("Greensboro Hotel Reservation System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 400);
+        frame.setSize(600, 500);
 
-        // Create panels for layout
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        // Create room status display area
-        JTextArea roomStatusArea = new JTextArea();
+        JTextArea roomStatusArea = new JTextArea(20, 40);
         roomStatusArea.setEditable(false);
         roomStatusArea.setText(hotel.getRoomsStatus());
         JScrollPane scrollPane = new JScrollPane(roomStatusArea);
         panel.add(scrollPane);
 
-        // Create input fields for booking/canceling
         JPanel inputPanel = new JPanel(new FlowLayout());
         JLabel roomNumberLabel = new JLabel("Room Number:");
-        JTextField roomNumberField = new JTextField(10);
+        JTextField roomNumberField = new JTextField(5);
         JLabel guestNameLabel = new JLabel("Guest Name:");
-        JTextField guestNameField = new JTextField(10);
+        JTextField guestNameField = new JTextField(15);
+        
+        String[] dates = {"November 26", "November 27"};
+        JComboBox<String> dateComboBox = new JComboBox<>(dates);
 
         inputPanel.add(roomNumberLabel);
         inputPanel.add(roomNumberField);
         inputPanel.add(guestNameLabel);
         inputPanel.add(guestNameField);
+        inputPanel.add(new JLabel("Date:"));
+        inputPanel.add(dateComboBox);
         panel.add(inputPanel);
 
-        // Create buttons for booking, canceling, and viewing status
         JPanel buttonPanel = new JPanel(new FlowLayout());
-        JButton bookButton = new JButton("Book Room");
-        JButton cancelButton = new JButton("Cancel Booking");
+        JButton reserveButton = new JButton("Reserve Room");
+        JButton cancelButton = new JButton("Cancel Reservation");
         JButton refreshButton = new JButton("Refresh Status");
 
-        // Action for booking room
-        bookButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    int roomNumber = Integer.parseInt(roomNumberField.getText());
-                    String guestName = guestNameField.getText();
-                    hotel.bookRoom(roomNumber, guestName);
-                    roomStatusArea.setText(hotel.getRoomsStatus());
-                    JOptionPane.showMessageDialog(frame, "Room " + roomNumber + " successfully booked for " + guestName);
-                } catch (RoomBookingException ex) {
-                    JOptionPane.showMessageDialog(frame, "Error: " + ex.getMessage(), "Booking Error", JOptionPane.ERROR_MESSAGE);
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(frame, "Please enter a valid room number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+        reserveButton.addActionListener(e -> {
+            try {
+                int roomNumber = Integer.parseInt(roomNumberField.getText());
+                String guestName = guestNameField.getText().trim();
+                if (guestName.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Please enter a guest name",
+                                               "Input Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
-            }
-        });
-
-        // Action for canceling room booking
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    int roomNumber = Integer.parseInt(roomNumberField.getText());
-                    hotel.cancelBooking(roomNumber);
-                    roomStatusArea.setText(hotel.getRoomsStatus());
-                    JOptionPane.showMessageDialog(frame, "Room " + roomNumber + " booking canceled.");
-                } catch (RoomBookingException ex) {
-                    JOptionPane.showMessageDialog(frame, "Error: " + ex.getMessage(), "Cancellation Error", JOptionPane.ERROR_MESSAGE);
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(frame, "Please enter a valid room number.", "Input Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        // Action for refreshing room status
-        refreshButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+                int dayIndex = dateComboBox.getSelectedIndex();
+                
+                hotel.reserveRoom(roomNumber, guestName, dayIndex);
                 roomStatusArea.setText(hotel.getRoomsStatus());
+                JOptionPane.showMessageDialog(frame, "Room " + roomNumber + " reserved for " + guestName + 
+                                           " on " + dates[dayIndex]);
+            } catch (NoRoomException ex) {
+                JOptionPane.showMessageDialog(frame, ex.getMessage(), "No Rooms Available", 
+                                           JOptionPane.ERROR_MESSAGE);
+            } catch (RoomBookingException ex) {
+                JOptionPane.showMessageDialog(frame, "Error: " + ex.getMessage(), 
+                                           "Booking Error", JOptionPane.ERROR_MESSAGE);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(frame, "Please enter a valid room number.", 
+                                           "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // Add buttons to the panel
-        buttonPanel.add(bookButton);
+        cancelButton.addActionListener(e -> {
+            try {
+                int roomNumber = Integer.parseInt(roomNumberField.getText());
+                String guestName = guestNameField.getText().trim();
+                if (guestName.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Please enter the guest name who made the reservation",
+                                               "Input Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                int dayIndex = dateComboBox.getSelectedIndex();
+                
+                hotel.cancelReservation(roomNumber, guestName, dayIndex);
+                roomStatusArea.setText(hotel.getRoomsStatus());
+                JOptionPane.showMessageDialog(frame, "Reservation cancelled for Room " + 
+                                           roomNumber + " on " + dates[dayIndex]);
+            } catch (RoomBookingException ex) {
+                JOptionPane.showMessageDialog(frame, "Error: " + ex.getMessage(), 
+                                           "Cancellation Error", JOptionPane.ERROR_MESSAGE);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(frame, "Please enter a valid room number.", 
+                                           "Input Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        refreshButton.addActionListener(e -> roomStatusArea.setText(hotel.getRoomsStatus()));
+
+        buttonPanel.add(reserveButton);
         buttonPanel.add(cancelButton);
         buttonPanel.add(refreshButton);
         panel.add(buttonPanel);
 
-        // Add the panel to the frame
         frame.add(panel);
         frame.setVisible(true);
     }
