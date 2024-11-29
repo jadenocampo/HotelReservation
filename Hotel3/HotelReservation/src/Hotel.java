@@ -1,3 +1,8 @@
+//Nandi Hawkins, Jahseim Merritt, Jaden Ocampo
+//Dr. Yu
+//COMP 360 Project 3: Hotel Reservations
+// November 29, 2024
+
 import java.util.HashMap;
 public class Hotel {
     private HashMap<Integer, Room> rooms;
